@@ -1,0 +1,82 @@
+{
+  "name": "controle-gastos",
+  "version": "1.0.0",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "electron:dev": "npx next dev -p 3005",
+    "electron:open": "npx electron .",
+    "electron:build": "node scripts/build-electron.mjs"
+  },
+  "dependencies": {
+    "date-fns": "^3.6.0",
+    "googleapis": "^140.0.1",
+    "lucide-react": "^0.414.0",
+    "next": "^14.2.29",
+    "react": "^18",
+    "react-dom": "^18",
+    "recharts": "^2.12.7",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.5",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  },
+  "build": {
+    "appId": "com.controlegastos.app",
+    "productName": "Controle de Gastos",
+    "copyright": "Copyright © 2025",
+    "directories": {
+      "output": "dist-electron",
+      "buildResources": "electron/assets"
+    },
+    "files": [
+      "electron/main.js",
+      "electron/preload.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": ".next/standalone",
+        "to": "nextjs-server",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "sign": null,
+      "signingHashAlgorithms": null
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerLanguages": ["pt_BR"],
+      "language": "1046",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/electron/**"
+    ]
+  }
+}

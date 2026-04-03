@@ -1,0 +1,39 @@
+# Dependências
+node_modules/
+
+# Build Next.js
+.next/
+out/
+
+# Build Electron
+dist-electron/
+
+# Variáveis de ambiente — NUNCA commitar
+.env.local
+.env*.local
+
+# Vercel
+.vercel/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor e ferramentas locais
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Cache
+.eslintcache
