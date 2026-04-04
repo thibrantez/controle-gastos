@@ -7,6 +7,7 @@ import {
   History,
   PlusCircle,
   BarChart3,
+  CalendarDays,
   Wallet,
 } from 'lucide-react'
 
@@ -15,6 +16,7 @@ const navItems = [
   { href: '/historico', label: 'Histórico', icon: History },
   { href: '/novo-gasto', label: 'Novo Gasto', icon: PlusCircle },
   { href: '/resumo-mensal', label: 'Resumo Mensal', icon: BarChart3 },
+  { href: '/resumo-anual', label: 'Resumo Anual', icon: CalendarDays },
 ]
 
 export default function Sidebar() {
