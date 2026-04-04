@@ -18,7 +18,7 @@ import {
 const fmt = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-export const revalidate = 60 // cache por 60s
+export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
   const [gastos, salario] = await Promise.all([getGastos(), getSalario()])

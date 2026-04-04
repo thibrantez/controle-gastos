@@ -1,7 +1,7 @@
 import { getGastos, resumoMensal, CATEGORIAS, mesLabel } from '@/lib/sheets'
 import { TrendingDown } from 'lucide-react'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 const fmt = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
