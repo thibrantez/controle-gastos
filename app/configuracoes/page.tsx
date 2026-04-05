@@ -6,6 +6,49 @@ import Link from 'next/link'
 
 const TELEGRAM_KEY = 'telegram_weekly_summary'
 
+function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  // on=false → círculo esquerda (left:3), fundo cinza
+  // on=true  → círculo direita (left:25), fundo indigo
+  // Contenção garantida: 25 + 20 = 45px < 48px (largura do botão)
+  const circleLeft = on === true ? 25 : 3
+  const bgColor    = on === true ? '#6366f1' : '#4b5563'
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-checked={on}
+      role="switch"
+      style={{
+        position: 'relative',
+        width: 48,
+        height: 26,
+        borderRadius: 13,
+        backgroundColor: bgColor,
+        border: 'none',
+        cursor: 'pointer',
+        flexShrink: 0,
+        padding: 0,
+        transition: 'background-color 0.25s',
+      }}
+    >
+      <span
+        style={{
+          position: 'absolute',
+          top: 3,
+          left: circleLeft,
+          width: 20,
+          height: 20,
+          borderRadius: '50%',
+          backgroundColor: '#ffffff',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.35)',
+          transition: 'left 0.25s',
+        }}
+      />
+    </button>
+  )
+}
+
 export default function ConfiguracoesPage() {
   const [telegramEnabled, setTelegramEnabled] = useState(false)
   const [chatId, setChatId] = useState('')
@@ -15,7 +58,7 @@ export default function ConfiguracoesPage() {
     const stored = localStorage.getItem(TELEGRAM_KEY)
     if (stored) {
       const parsed = JSON.parse(stored)
-      setTelegramEnabled(parsed.enabled ?? false)
+      // não restaura enabled — sempre inicia como false
       setChatId(parsed.chatId ?? '')
     }
   }, [])
@@ -52,18 +95,7 @@ export default function ConfiguracoesPage() {
             <p className="text-sm text-gray-300">Ativar resumo semanal</p>
             <p className="text-xs text-gray-600 mt-0.5">Envia todo domingo às 20h</p>
           </div>
-          <button
-            onClick={() => setTelegramEnabled((v) => !v)}
-            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
-              telegramEnabled ? 'bg-indigo-500' : 'bg-gray-700'
-            }`}
-          >
-            <span
-              className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${
-                telegramEnabled ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </button>
+          <Toggle on={telegramEnabled} onToggle={() => setTelegramEnabled((v) => !v)} />
         </div>
 
         {telegramEnabled && (

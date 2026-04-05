@@ -15,6 +15,8 @@ import type { Gasto } from '@/lib/constants'
 interface Props {
   gastos: Gasto[]
   salario: number
+  mes: number
+  ano: number
 }
 
 interface TooltipProps {
@@ -36,24 +38,22 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
   )
 }
 
-export default function DailySaldoChart({ gastos, salario }: Props) {
+export default function DailySaldoChart({ gastos, salario, mes, ano }: Props) {
   const now = new Date()
-  const mes = now.getMonth() + 1
-  const ano = now.getFullYear()
-  const hoje = now.getDate()
+  const isCurrentMonth = mes === now.getMonth() + 1 && ano === now.getFullYear()
+  // For current month show up to today; for other months show all days
+  const lastDay = isCurrentMonth ? now.getDate() : new Date(ano, mes, 0).getDate()
 
   const dailySpent: Record<number, number> = {}
   for (const g of gastos) {
     const parts = g.data.split('/')
     if (parts.length < 3) continue
-    if (parseInt(parts[1]) === mes && parseInt(parts[2]) === ano) {
-      const d = parseInt(parts[0])
-      dailySpent[d] = (dailySpent[d] ?? 0) + g.valor
-    }
+    const d = parseInt(parts[0])
+    dailySpent[d] = (dailySpent[d] ?? 0) + g.valor
   }
 
   let cumulative = 0
-  const data = Array.from({ length: hoje }, (_, i) => {
+  const data = Array.from({ length: lastDay }, (_, i) => {
     const d = i + 1
     cumulative += dailySpent[d] ?? 0
     return { dia: String(d), saldo: salario - cumulative }

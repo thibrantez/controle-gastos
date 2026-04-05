@@ -10,10 +10,10 @@ import PaymentPieChart from '@/components/PaymentPieChart'
 import CategoryBudgets from '@/components/CategoryBudgets'
 import DailySaldoChart from '@/components/DailySaldoChart'
 import LowBalanceAlert from '@/components/LowBalanceAlert'
+import MonthSelector from '@/components/MonthSelector'
 import {
   getGastos,
   getSalario,
-  gastosMesAtual,
   totalPorCategoria,
   totalPorFormaPagamento,
 } from '@/lib/sheets'
@@ -23,39 +23,52 @@ const fmt = (v: number) =>
 
 export const dynamic = 'force-dynamic'
 
-export default async function DashboardPage() {
-  const [gastos, salario] = await Promise.all([getGastos(), getSalario()])
-  const mesAtual = gastosMesAtual(gastos)
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: { mes?: string; ano?: string }
+}) {
+  const now = new Date()
+  const mesSel = parseInt(searchParams.mes ?? '') || now.getMonth() + 1
+  const anoSel = parseInt(searchParams.ano ?? '') || now.getFullYear()
 
-  const totalMes = mesAtual.reduce((s, g) => s + g.valor, 0)
+  const [gastos, salario] = await Promise.all([getGastos(), getSalario()])
+
+  const gastosMes = gastos.filter((g) => {
+    const parts = g.data.split('/')
+    return (
+      parts.length >= 3 &&
+      parseInt(parts[1]) === mesSel &&
+      parseInt(parts[2]) === anoSel
+    )
+  })
+
+  const totalMes = gastosMes.reduce((s, g) => s + g.valor, 0)
   const saldo = salario - totalMes
-  const maiorGasto = mesAtual.reduce(
+  const maiorGasto = gastosMes.reduce(
     (max, g) => (g.valor > max.valor ? g : max),
-    mesAtual[0] ?? { valor: 0, descricao: '-' }
+    gastosMes[0] ?? { valor: 0, descricao: '-' }
   )
 
-  const catData = Object.entries(totalPorCategoria(mesAtual))
+  const catData = Object.entries(totalPorCategoria(gastosMes))
     .map(([categoria, total]) => ({ categoria, total }))
     .sort((a, b) => b.total - a.total)
 
-  const catTotals = totalPorCategoria(mesAtual)
+  const catTotals = totalPorCategoria(gastosMes)
 
-  const pgData = Object.entries(totalPorFormaPagamento(mesAtual)).map(
+  const pgData = Object.entries(totalPorFormaPagamento(gastosMes)).map(
     ([name, value]) => ({ name, value })
   )
-
-  const now = new Date()
-  const mesLabel = now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold gradient-text">Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1 capitalize">{mesLabel}</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h1 className="text-2xl font-bold gradient-text">Dashboard</h1>
+        <div className="flex items-center gap-3 flex-wrap">
+          <MonthSelector mes={mesSel} ano={anoSel} />
+          <LowBalanceAlert saldo={saldo} />
         </div>
-        <LowBalanceAlert saldo={saldo} />
       </div>
 
       {/* KPIs */}
@@ -90,7 +103,7 @@ export default async function DashboardPage() {
         />
         <KPICard
           title="Lançamentos"
-          value={String(mesAtual.length)}
+          value={String(gastosMes.length)}
           subtitle="transações no mês"
           icon={Receipt}
           iconColor="text-blue-400"
@@ -102,23 +115,23 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card p-6">
           <h2 className="text-base font-semibold text-white mb-1">Gastos por Categoria</h2>
-          <p className="text-xs text-gray-500 mb-6">Mês atual</p>
+          <p className="text-xs text-gray-500 mb-6">Período selecionado</p>
           {catData.length > 0 ? <CategoryBarChart data={catData} /> : <EmptyState />}
         </div>
 
         <div className="card p-6">
           <h2 className="text-base font-semibold text-white mb-1">Forma de Pagamento</h2>
-          <p className="text-xs text-gray-500 mb-6">Mês atual</p>
+          <p className="text-xs text-gray-500 mb-6">Período selecionado</p>
           {pgData.length > 0 ? <PaymentPieChart data={pgData} /> : <EmptyState />}
         </div>
       </div>
 
       {/* Daily balance chart */}
-      {mesAtual.length > 0 && (
+      {gastosMes.length > 0 && (
         <div className="card p-6">
           <h2 className="text-base font-semibold text-white mb-1">Evolução do Saldo</h2>
-          <p className="text-xs text-gray-500 mb-4">Saldo dia a dia no mês atual</p>
-          <DailySaldoChart gastos={mesAtual} salario={salario} />
+          <p className="text-xs text-gray-500 mb-4">Saldo dia a dia no período selecionado</p>
+          <DailySaldoChart gastos={gastosMes} salario={salario} mes={mesSel} ano={anoSel} />
         </div>
       )}
 
@@ -128,11 +141,11 @@ export default async function DashboardPage() {
       {/* Recent transactions */}
       <div className="card p-6">
         <h2 className="text-base font-semibold text-white mb-4">Últimos Lançamentos</h2>
-        {mesAtual.length === 0 ? (
+        {gastosMes.length === 0 ? (
           <EmptyState />
         ) : (
           <div className="space-y-2">
-            {mesAtual
+            {gastosMes
               .slice()
               .reverse()
               .slice(0, 8)
@@ -169,7 +182,7 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center h-40 text-gray-600">
       <Receipt size={32} className="mb-2 opacity-40" />
-      <p className="text-sm">Nenhum lançamento este mês</p>
+      <p className="text-sm">Nenhum lançamento neste período</p>
     </div>
   )
 }

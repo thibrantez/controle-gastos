@@ -54,8 +54,10 @@ export async function getGastos(): Promise<Gasto[]> {
 
   const rows = response.data.values ?? []
 
+  const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/
+
   return rows
-    .filter((row) => row[0] && row[3])
+    .filter((row) => row[0] && dateRegex.test(String(row[0]).trim()) && row[3])
     .map((row, index) => ({
       id: index + 1,
       data: row[0] ?? '',
