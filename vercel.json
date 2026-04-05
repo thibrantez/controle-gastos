@@ -4,6 +4,10 @@
   "buildCommand": "next build",
   "devCommand": "next dev",
   "installCommand": "npm install",
+  "env": {
+    "ANTHROPIC_API_KEY": "Obter em console.anthropic.com → API Keys → configurar no Vercel Dashboard em Settings › Environment Variables",
+    "GEMINI_API_KEY": "Obter em aistudio.google.com → API Keys → configurar no Vercel Dashboard em Settings › Environment Variables"
+  },
   "headers": [
     {
       "source": "/(.*)",

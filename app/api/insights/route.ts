@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import {
   getGastos,
   getSalario,
@@ -81,16 +80,25 @@ Responda APENAS com um JSON válido, sem texto fora do JSON, sem markdown:
   "meta_mes": "2-3 frases sobre progresso vs orçamento: se está dentro do esperado pro dia ${diaAtual}/${diasNoMes}, quanto pode gastar por dia pelo restante do mês, e se vai fechar positivo."
 }`
 
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-0',
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: prompt }],
+    const geminiRes = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 1024 },
+      }),
     })
 
-    const text =
-      response.content[0].type === 'text' ? response.content[0].text.trim() : ''
+    if (!geminiRes.ok) {
+      const errBody = await geminiRes.text()
+      throw new Error(`Gemini API error ${geminiRes.status}: ${errBody}`)
+    }
+
+    const geminiData = await geminiRes.json()
+    const text: string =
+      geminiData?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? ''
 
     // Extract JSON safely
     const jsonMatch = text.match(/\{[\s\S]*\}/)
