@@ -1,4 +1,3 @@
-import 'server-only'
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import {
@@ -82,7 +81,7 @@ Responda APENAS com um JSON válido, sem texto fora do JSON, sem markdown:
   "meta_mes": "2-3 frases sobre progresso vs orçamento: se está dentro do esperado pro dia ${diaAtual}/${diasNoMes}, quanto pode gastar por dia pelo restante do mês, e se vai fechar positivo."
 }`
 
-    const client = new Anthropic()
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-0',
@@ -107,15 +106,9 @@ Responda APENAS com um JSON válido, sem texto fora do JSON, sem markdown:
 
     return NextResponse.json(insights)
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : 'Erro desconhecido'
-    const isApiKey = message.toLowerCase().includes('api key') || message.toLowerCase().includes('authentication')
+    const message = err instanceof Error ? err.message : 'Erro desconhecido'
     return NextResponse.json(
-      {
-        error: isApiKey
-          ? 'ANTHROPIC_API_KEY não configurada. Adicione ao arquivo .env.local.'
-          : `Erro ao gerar insights: ${message}`,
-      },
+      { error: `Erro ao gerar insights: ${message}` },
       { status: 500 }
     )
   }
