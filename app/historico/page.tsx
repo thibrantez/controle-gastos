@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { Search, SlidersHorizontal, X, CalendarRange } from 'lucide-react'
 import { CATEGORIAS, FORMAS_PAGAMENTO, type Gasto } from '@/lib/constants'
 
 const fmt = (v: number) =>
@@ -16,12 +16,24 @@ function categoryEmoji(cat: string) {
   return map[cat] ?? '💸'
 }
 
+function parseGastoDate(dmy: string): number {
+  const [d, m, y] = dmy.split('/').map(Number)
+  return new Date(y, m - 1, d).getTime()
+}
+
+function parseInputDate(ymd: string): number {
+  const [y, m, d] = ymd.split('-').map(Number)
+  return new Date(y, m - 1, d).getTime()
+}
+
 export default function HistoricoPage() {
   const [gastos, setGastos] = useState<Gasto[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [categoria, setCategoria] = useState('')
   const [forma, setForma] = useState('')
+  const [dataInicio, setDataInicio] = useState('')
+  const [dataFim, setDataFim] = useState('')
   const [showFilters, setShowFilters] = useState(false)
 
   useEffect(() => {
@@ -42,12 +54,26 @@ export default function HistoricoPage() {
           g.categoria.toLowerCase().includes(search.toLowerCase())
         const matchCat = !categoria || g.categoria === categoria
         const matchForma = !forma || g.formaPagamento === forma
-        return matchSearch && matchCat && matchForma
+        let matchDate = true
+        if (dataInicio || dataFim) {
+          const gDate = parseGastoDate(g.data)
+          if (dataInicio && gDate < parseInputDate(dataInicio)) matchDate = false
+          if (dataFim && gDate > parseInputDate(dataFim)) matchDate = false
+        }
+        return matchSearch && matchCat && matchForma && matchDate
       })
-  }, [gastos, search, categoria, forma])
+  }, [gastos, search, categoria, forma, dataInicio, dataFim])
 
   const totalFiltrado = filtered.reduce((s, g) => s + g.valor, 0)
-  const hasFilters = search || categoria || forma
+  const hasFilters = !!search || !!categoria || !!forma || !!dataInicio || !!dataFim
+
+  const clearFilters = () => {
+    setSearch('')
+    setCategoria('')
+    setForma('')
+    setDataInicio('')
+    setDataFim('')
+  }
 
   return (
     <div className="space-y-6">
@@ -70,9 +96,7 @@ export default function HistoricoPage() {
         >
           <SlidersHorizontal size={15} />
           Filtros
-          {hasFilters && (
-            <span className="w-2 h-2 rounded-full bg-indigo-400" />
-          )}
+          {hasFilters && <span className="w-2 h-2 rounded-full bg-indigo-400" />}
         </button>
       </div>
 
@@ -101,51 +125,73 @@ export default function HistoricoPage() {
         </div>
 
         {showFilters && (
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-gray-500 mb-1.5 block">
-                Categoria
-              </label>
-              <select
-                value={categoria}
-                onChange={(e) => setCategoria(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
-              >
-                <option value="">Todas</option>
-                {CATEGORIAS.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-gray-500 mb-1.5 block">Categoria</label>
+                <select
+                  value={categoria}
+                  onChange={(e) => setCategoria(e.target.value)}
+                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                >
+                  <option value="">Todas</option>
+                  {CATEGORIAS.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1.5 block">Forma de Pagamento</label>
+                <select
+                  value={forma}
+                  onChange={(e) => setForma(e.target.value)}
+                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                >
+                  <option value="">Todas</option>
+                  {FORMAS_PAGAMENTO.map((f) => (
+                    <option key={f} value={f}>
+                      {f}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
+
             <div>
-              <label className="text-xs text-gray-500 mb-1.5 block">
-                Forma de Pagamento
+              <label className="text-xs text-gray-500 mb-1.5 flex items-center gap-1.5">
+                <CalendarRange size={12} />
+                Período
               </label>
-              <select
-                value={forma}
-                onChange={(e) => setForma(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
-              >
-                <option value="">Todas</option>
-                {FORMAS_PAGAMENTO.map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
-                ))}
-              </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <input
+                    type="date"
+                    value={dataInicio}
+                    onChange={(e) => setDataInicio(e.target.value)}
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors [color-scheme:dark]"
+                  />
+                  <p className="text-xs text-gray-600 mt-1 ml-1">Data início</p>
+                </div>
+                <div>
+                  <input
+                    type="date"
+                    value={dataFim}
+                    onChange={(e) => setDataFim(e.target.value)}
+                    min={dataInicio || undefined}
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors [color-scheme:dark]"
+                  />
+                  <p className="text-xs text-gray-600 mt-1 ml-1">Data fim</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
         {hasFilters && (
           <button
-            onClick={() => {
-              setSearch('')
-              setCategoria('')
-              setForma('')
-            }}
+            onClick={clearFilters}
             className="text-xs text-gray-500 hover:text-white flex items-center gap-1 transition-colors"
           >
             <X size={12} /> Limpar filtros
@@ -176,16 +222,9 @@ export default function HistoricoPage() {
               </thead>
               <tbody className="divide-y divide-gray-800/50">
                 {filtered.map((g, i) => (
-                  <tr
-                    key={i}
-                    className="hover:bg-gray-800/40 transition-colors"
-                  >
-                    <td className="px-5 py-3.5 text-gray-400 whitespace-nowrap">
-                      {g.data}
-                    </td>
-                    <td className="px-5 py-3.5 text-white font-medium">
-                      {g.descricao}
-                    </td>
+                  <tr key={i} className="hover:bg-gray-800/40 transition-colors">
+                    <td className="px-5 py-3.5 text-gray-400 whitespace-nowrap">{g.data}</td>
+                    <td className="px-5 py-3.5 text-white font-medium">{g.descricao}</td>
                     <td className="px-5 py-3.5">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 text-xs">
                         {categoryEmoji(g.categoria)} {g.categoria}

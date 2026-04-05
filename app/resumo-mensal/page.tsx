@@ -1,5 +1,6 @@
 import { getGastos, resumoMensal, CATEGORIAS, mesLabel } from '@/lib/sheets'
 import { TrendingDown } from 'lucide-react'
+import PdfExportButton from '@/components/PdfExportButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,6 +11,11 @@ const fmtShort = (v: number) => {
   if (v === 0) return ''
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 }
+
+const fmtPdf = (v: number) =>
+  v === 0
+    ? '-'
+    : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 
 function heatColor(v: number, max: number): string {
   if (v === 0 || max === 0) return ''
@@ -24,21 +30,31 @@ export default async function ResumoMensalPage() {
   const gastos = await getGastos()
   const resumo = resumoMensal(gastos)
 
-  // Filtrar categorias que têm pelo menos algum valor no período
   const categoriasAtivas = CATEGORIAS.filter((cat) =>
     resumo.some((r) => (r.categorias[cat] ?? 0) > 0)
   )
 
-  // Máximo por categoria para heatmap
   const maxPorCategoria: Record<string, number> = {}
   for (const cat of categoriasAtivas) {
-    maxPorCategoria[cat] = Math.max(
-      ...resumo.map((r) => r.categorias[cat] ?? 0)
-    )
+    maxPorCategoria[cat] = Math.max(...resumo.map((r) => r.categorias[cat] ?? 0))
   }
 
-  // Total geral
   const totalGeral = resumo.reduce((s, r) => s + r.total, 0)
+
+  // PDF data
+  const pdfHeaders = ['Mês', ...categoriasAtivas, 'Total']
+  const pdfRows = resumo.map((r) => [
+    mesLabel(r.mes),
+    ...categoriasAtivas.map((c) => fmtPdf(r.categorias[c] ?? 0)),
+    fmt(r.total),
+  ])
+  const pdfFooter = [
+    'Total',
+    ...categoriasAtivas.map((c) =>
+      fmtPdf(resumo.reduce((s, r) => s + (r.categorias[c] ?? 0), 0))
+    ),
+    fmt(totalGeral),
+  ]
 
   return (
     <div className="space-y-6">
@@ -50,16 +66,27 @@ export default async function ResumoMensalPage() {
             {resumo.length} meses registrados · Total {fmt(totalGeral)}
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-600">
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-emerald-500/30 inline-block" /> Baixo
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-amber-500/30 inline-block" /> Médio
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-rose-500/30 inline-block" /> Alto
-          </span>
+        <div className="flex items-center gap-3">
+          {resumo.length > 0 && (
+            <PdfExportButton
+              filename="resumo-mensal"
+              title="Resumo Mensal de Gastos"
+              headers={pdfHeaders}
+              rows={pdfRows}
+              footerRow={pdfFooter}
+            />
+          )}
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded bg-emerald-500/30 inline-block" /> Baixo
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded bg-amber-500/30 inline-block" /> Médio
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded bg-rose-500/30 inline-block" /> Alto
+            </span>
+          </div>
         </div>
       </div>
 
@@ -78,10 +105,7 @@ export default async function ResumoMensalPage() {
                     Mês
                   </th>
                   {categoriasAtivas.map((cat) => (
-                    <th
-                      key={cat}
-                      className="text-right px-4 py-3.5 font-medium min-w-[110px]"
-                    >
+                    <th key={cat} className="text-right px-4 py-3.5 font-medium min-w-[110px]">
                       {cat}
                     </th>
                   ))}
@@ -125,15 +149,9 @@ export default async function ResumoMensalPage() {
                     Total
                   </td>
                   {categoriasAtivas.map((cat) => {
-                    const total = resumo.reduce(
-                      (s, r) => s + (r.categorias[cat] ?? 0),
-                      0
-                    )
+                    const total = resumo.reduce((s, r) => s + (r.categorias[cat] ?? 0), 0)
                     return (
-                      <td
-                        key={cat}
-                        className="px-4 py-3.5 text-right text-xs text-gray-400 font-semibold"
-                      >
+                      <td key={cat} className="px-4 py-3.5 text-right text-xs text-gray-400 font-semibold">
                         {fmtShort(total)}
                       </td>
                     )
@@ -151,33 +169,23 @@ export default async function ResumoMensalPage() {
       {/* Category summary cards */}
       {categoriasAtivas.length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold text-gray-400 mb-3">
-            Acumulado por categoria
-          </h2>
+          <h2 className="text-sm font-semibold text-gray-400 mb-3">Acumulado por categoria</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {categoriasAtivas
               .map((cat) => ({
                 cat,
-                total: resumo.reduce(
-                  (s, r) => s + (r.categorias[cat] ?? 0),
-                  0
-                ),
+                total: resumo.reduce((s, r) => s + (r.categorias[cat] ?? 0), 0),
               }))
               .sort((a, b) => b.total - a.total)
               .map(({ cat, total }) => (
                 <div key={cat} className="card p-4">
                   <p className="text-xs text-gray-500 truncate">{cat}</p>
-                  <p className="text-base font-bold text-white mt-1">
-                    {fmt(total)}
-                  </p>
+                  <p className="text-base font-bold text-white mt-1">{fmt(total)}</p>
                   <div className="mt-2 h-1 rounded-full bg-gray-800 overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
                       style={{
-                        width: `${Math.min(
-                          100,
-                          (total / totalGeral) * 100 * 3
-                        )}%`,
+                        width: `${Math.min(100, (total / totalGeral) * 100 * 3)}%`,
                       }}
                     />
                   </div>

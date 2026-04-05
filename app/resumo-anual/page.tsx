@@ -1,6 +1,7 @@
 import { getGastos, CATEGORIAS, MESES_PT } from '@/lib/sheets'
 import { TrendingDown } from 'lucide-react'
 import AnnualLineChart from '@/components/AnnualLineChart'
+import PdfExportButton from '@/components/PdfExportButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +16,11 @@ const fmtShort = (v: number) => {
     maximumFractionDigits: 0,
   })
 }
+
+const fmtPdf = (v: number) =>
+  v === 0
+    ? '-'
+    : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 
 function heatColor(v: number, max: number): string {
   if (v === 0 || max === 0) return ''
@@ -34,7 +40,6 @@ export default async function ResumoAnualPage() {
     return parts.length >= 3 && parseInt(parts[2]) === ano
   })
 
-  // Build matrix: category -> month index (0–11) -> total
   const matrix: Record<string, number[]> = {}
   for (const cat of CATEGORIAS) {
     matrix[cat] = Array(12).fill(0)
@@ -64,14 +69,37 @@ export default async function ResumoAnualPage() {
     maxPorCategoria[cat] = Math.max(...matrix[cat])
   }
 
+  // PDF data
+  const pdfHeaders = ['Categoria', ...MESES_PT, 'Total']
+  const pdfRows = categoriasAtivas.map((cat) => {
+    const catTotal = matrix[cat].reduce((s, v) => s + v, 0)
+    return [cat, ...matrix[cat].map(fmtPdf), fmt(catTotal)]
+  })
+  const pdfFooter = [
+    'Total',
+    ...totaisMensais.map((m) => fmtPdf(m.total)),
+    fmt(totalGeral),
+  ]
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold gradient-text">Resumo Anual</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          {ano} · {gastosAno.length} transações · Total {fmt(totalGeral)}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold gradient-text">Resumo Anual</h1>
+          <p className="text-gray-500 text-sm mt-1">
+            {ano} · {gastosAno.length} transações · Total {fmt(totalGeral)}
+          </p>
+        </div>
+        {gastosAno.length > 0 && (
+          <PdfExportButton
+            filename={`resumo-anual-${ano}`}
+            title={`Resumo Anual de Gastos — ${ano}`}
+            headers={pdfHeaders}
+            rows={pdfRows}
+            footerRow={pdfFooter}
+          />
+        )}
       </div>
 
       {gastosAno.length === 0 ? (

@@ -15,6 +15,8 @@
   "dependencies": {
     "date-fns": "^3.6.0",
     "googleapis": "^140.0.1",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.414.0",
     "next": "^14.2.29",
     "react": "^18",
@@ -52,14 +54,18 @@
       {
         "from": ".next/standalone",
         "to": "nextjs-server",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "artifactName": "${productName}-Setup-${version}.${ext}",
@@ -69,7 +75,9 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "installerLanguages": ["pt_BR"],
+      "installerLanguages": [
+        "pt_BR"
+      ],
       "language": "1046",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true

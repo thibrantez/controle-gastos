@@ -7,6 +7,9 @@ import {
 import KPICard from '@/components/KPICard'
 import CategoryBarChart from '@/components/CategoryBarChart'
 import PaymentPieChart from '@/components/PaymentPieChart'
+import CategoryBudgets from '@/components/CategoryBudgets'
+import DailySaldoChart from '@/components/DailySaldoChart'
+import LowBalanceAlert from '@/components/LowBalanceAlert'
 import {
   getGastos,
   getSalario,
@@ -35,6 +38,8 @@ export default async function DashboardPage() {
     .map(([categoria, total]) => ({ categoria, total }))
     .sort((a, b) => b.total - a.total)
 
+  const catTotals = totalPorCategoria(mesAtual)
+
   const pgData = Object.entries(totalPorFormaPagamento(mesAtual)).map(
     ([name, value]) => ({ name, value })
   )
@@ -45,9 +50,12 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold gradient-text">Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-1 capitalize">{mesLabel}</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold gradient-text">Dashboard</h1>
+          <p className="text-gray-500 text-sm mt-1 capitalize">{mesLabel}</p>
+        </div>
+        <LowBalanceAlert saldo={saldo} />
       </div>
 
       {/* KPIs */}
@@ -92,38 +100,34 @@ export default async function DashboardPage() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Bar chart */}
         <div className="card p-6">
-          <h2 className="text-base font-semibold text-white mb-1">
-            Gastos por Categoria
-          </h2>
+          <h2 className="text-base font-semibold text-white mb-1">Gastos por Categoria</h2>
           <p className="text-xs text-gray-500 mb-6">Mês atual</p>
-          {catData.length > 0 ? (
-            <CategoryBarChart data={catData} />
-          ) : (
-            <EmptyState />
-          )}
+          {catData.length > 0 ? <CategoryBarChart data={catData} /> : <EmptyState />}
         </div>
 
-        {/* Pie chart */}
         <div className="card p-6">
-          <h2 className="text-base font-semibold text-white mb-1">
-            Forma de Pagamento
-          </h2>
+          <h2 className="text-base font-semibold text-white mb-1">Forma de Pagamento</h2>
           <p className="text-xs text-gray-500 mb-6">Mês atual</p>
-          {pgData.length > 0 ? (
-            <PaymentPieChart data={pgData} />
-          ) : (
-            <EmptyState />
-          )}
+          {pgData.length > 0 ? <PaymentPieChart data={pgData} /> : <EmptyState />}
         </div>
       </div>
 
+      {/* Daily balance chart */}
+      {mesAtual.length > 0 && (
+        <div className="card p-6">
+          <h2 className="text-base font-semibold text-white mb-1">Evolução do Saldo</h2>
+          <p className="text-xs text-gray-500 mb-4">Saldo dia a dia no mês atual</p>
+          <DailySaldoChart gastos={mesAtual} salario={salario} />
+        </div>
+      )}
+
+      {/* Category budgets */}
+      <CategoryBudgets gastosPorCategoria={catTotals} />
+
       {/* Recent transactions */}
       <div className="card p-6">
-        <h2 className="text-base font-semibold text-white mb-4">
-          Últimos Lançamentos
-        </h2>
+        <h2 className="text-base font-semibold text-white mb-4">Últimos Lançamentos</h2>
         {mesAtual.length === 0 ? (
           <EmptyState />
         ) : (
@@ -149,9 +153,7 @@ export default async function DashboardPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-rose-400">
-                      -{fmt(g.valor)}
-                    </p>
+                    <p className="text-sm font-semibold text-rose-400">-{fmt(g.valor)}</p>
                     <p className="text-xs text-gray-600">{g.formaPagamento}</p>
                   </div>
                 </div>

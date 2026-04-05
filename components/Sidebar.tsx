@@ -8,8 +8,12 @@ import {
   PlusCircle,
   BarChart3,
   CalendarDays,
+  Settings,
+  Sun,
+  Moon,
   Wallet,
 } from 'lucide-react'
+import { useTheme } from './ThemeProvider'
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -17,10 +21,12 @@ const navItems = [
   { href: '/novo-gasto', label: 'Novo Gasto', icon: PlusCircle },
   { href: '/resumo-mensal', label: 'Resumo Mensal', icon: BarChart3 },
   { href: '/resumo-anual', label: 'Resumo Anual', icon: CalendarDays },
+  { href: '/configuracoes', label: 'Configurações', icon: Settings },
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const { theme, toggle } = useTheme()
 
   return (
     <aside className="w-64 shrink-0 bg-gray-900 border-r border-gray-800 flex flex-col">
@@ -38,7 +44,7 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href
           return (
@@ -53,26 +59,35 @@ export default function Sidebar() {
             >
               <Icon
                 className={`w-4.5 h-4.5 shrink-0 ${
-                  active
-                    ? 'text-blue-400'
-                    : 'text-gray-500 group-hover:text-gray-300'
+                  active ? 'text-blue-400' : 'text-gray-500 group-hover:text-gray-300'
                 }`}
                 size={18}
               />
               {label}
-              {active && (
-                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400" />
-              )}
+              {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400" />}
             </Link>
           )
         })}
       </nav>
 
+      {/* Theme toggle */}
+      <div className="px-3 pb-2">
+        <button
+          onClick={toggle}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-150"
+        >
+          {theme === 'dark' ? (
+            <Sun size={18} className="text-gray-500 shrink-0" />
+          ) : (
+            <Moon size={18} className="text-gray-500 shrink-0" />
+          )}
+          {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+        </button>
+      </div>
+
       {/* Footer */}
       <div className="px-6 py-4 border-t border-gray-800">
-        <p className="text-xs text-gray-600 text-center">
-          Dados via Google Sheets
-        </p>
+        <p className="text-xs text-gray-600 text-center">Dados via Google Sheets</p>
       </div>
     </aside>
   )
