@@ -8,6 +8,7 @@ import {
   PlusCircle,
   BarChart3,
   CalendarDays,
+  Sparkles,
   Settings,
   Sun,
   Moon,
@@ -21,6 +22,7 @@ const navItems = [
   { href: '/novo-gasto', label: 'Novo Gasto', icon: PlusCircle },
   { href: '/resumo-mensal', label: 'Resumo Mensal', icon: BarChart3 },
   { href: '/resumo-anual', label: 'Resumo Anual', icon: CalendarDays },
+  { href: '/insights-ia', label: 'Insights IA', icon: Sparkles },
   { href: '/configuracoes', label: 'Configurações', icon: Settings },
 ]
 

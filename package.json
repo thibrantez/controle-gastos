@@ -13,6 +13,7 @@
     "electron:build": "node scripts/build-electron.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.82.0",
     "date-fns": "^3.6.0",
     "googleapis": "^140.0.1",
     "jspdf": "^4.2.1",
