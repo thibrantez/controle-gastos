@@ -80,7 +80,7 @@ Responda APENAS com um JSON válido, sem texto fora do JSON, sem markdown:
   "meta_mes": "2-3 frases sobre progresso vs orçamento: se está dentro do esperado pro dia ${diaAtual}/${diasNoMes}, quanto pode gastar por dia pelo restante do mês, e se vai fechar positivo."
 }`
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`
 
     const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
@@ -93,6 +93,8 @@ Responda APENAS com um JSON válido, sem texto fora do JSON, sem markdown:
 
     if (!geminiRes.ok) {
       const errBody = await geminiRes.text()
+      console.error('[Gemini API] Status:', geminiRes.status)
+      console.error('[Gemini API] Response body:', errBody)
       throw new Error(`Gemini API error ${geminiRes.status}: ${errBody}`)
     }
 
@@ -114,6 +116,7 @@ Responda APENAS com um JSON válido, sem texto fora do JSON, sem markdown:
 
     return NextResponse.json(insights)
   } catch (err) {
+    console.error('[Insights API] Erro completo:', err)
     const message = err instanceof Error ? err.message : 'Erro desconhecido'
     return NextResponse.json(
       { error: `Erro ao gerar insights: ${message}` },

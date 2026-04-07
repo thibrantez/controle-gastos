@@ -149,7 +149,7 @@ export default function InsightsIAPage() {
       {!loading && !error && (
         <p className="text-xs text-gray-700 text-center flex items-center justify-center gap-1.5">
           <Sparkles size={11} />
-          Gerado por Gemini 1.5 Flash (Google) · Sugestões baseadas nos seus dados reais
+          Gerado por Gemini 2.5 Flash (Google) · Sugestões baseadas nos seus dados reais
         </p>
       )}
     </div>
