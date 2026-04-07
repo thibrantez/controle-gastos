@@ -12,6 +12,7 @@ const fmt = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export async function GET() {
+  console.log('[Insights API] GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? 'chave presente' : 'chave ausente')
   try {
     const [gastos, salario] = await Promise.all([getGastos(), getSalario()])
     const mesAtual = gastosMesAtual(gastos)
