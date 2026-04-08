@@ -13,6 +13,7 @@ const fmt = (v: number) =>
 
 export async function GET() {
   console.log('[Insights API] GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? 'chave presente' : 'chave ausente')
+  console.log('[Insights API] GEMINI_API_KEY início:', process.env.GEMINI_API_KEY?.slice(0, 10))
   try {
     const [gastos, salario] = await Promise.all([getGastos(), getSalario()])
     const mesAtual = gastosMesAtual(gastos)
