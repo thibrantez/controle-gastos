@@ -1,5 +1,5 @@
 import { getGastos, resumoMensal, CATEGORIAS, mesLabel } from '@/lib/sheets'
-import { TrendingDown } from 'lucide-react'
+import { AlertTriangle, TrendingDown } from 'lucide-react'
 import PdfExportButton from '@/components/PdfExportButton'
 
 export const dynamic = 'force-dynamic'
@@ -26,8 +26,23 @@ function heatColor(v: number, max: number): string {
   return 'bg-emerald-500/10 text-emerald-400'
 }
 
+function SheetsError({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 text-center">
+      <AlertTriangle size={48} className="text-rose-400 opacity-70" />
+      <h2 className="text-xl font-semibold text-white">Erro ao carregar dados</h2>
+      <p className="text-gray-400 text-sm max-w-md">{message}</p>
+      <p className="text-gray-600 text-xs">Verifique as credenciais do Google Sheets nas variáveis de ambiente.</p>
+    </div>
+  )
+}
+
 export default async function ResumoMensalPage() {
-  const gastos = await getGastos()
+  const gastosOrError = await getGastos().catch((err) =>
+    err instanceof Error ? err.message : 'Erro desconhecido'
+  )
+  if (typeof gastosOrError === 'string') return <SheetsError message={gastosOrError} />
+  const gastos = gastosOrError
   const resumo = resumoMensal(gastos)
 
   const categoriasAtivas = CATEGORIAS.filter((cat) =>

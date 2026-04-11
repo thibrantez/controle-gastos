@@ -23,6 +23,17 @@ const fmt = (v: number) =>
 
 export const dynamic = 'force-dynamic'
 
+function SheetsError({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 text-center">
+      <AlertTriangle size={48} className="text-rose-400 opacity-70" />
+      <h2 className="text-xl font-semibold text-white">Erro ao carregar dados</h2>
+      <p className="text-gray-400 text-sm max-w-md">{message}</p>
+      <p className="text-gray-600 text-xs">Verifique as credenciais do Google Sheets nas variáveis de ambiente.</p>
+    </div>
+  )
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -32,7 +43,12 @@ export default async function DashboardPage({
   const mesSel = parseInt(searchParams.mes ?? '') || now.getMonth() + 1
   const anoSel = parseInt(searchParams.ano ?? '') || now.getFullYear()
 
-  const [gastos, salario] = await Promise.all([getGastos(), getSalario()])
+  const result = await Promise.all([getGastos(), getSalario()]).catch((err) => {
+    const msg = err instanceof Error ? err.message : 'Erro desconhecido'
+    return msg as string
+  })
+  if (typeof result === 'string') return <SheetsError message={result} />
+  const [gastos, salario] = result
 
   const gastosMes = gastos.filter((g) => {
     const parts = g.data.split('/')
