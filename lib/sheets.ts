@@ -9,14 +9,45 @@ export { MESES_PT, mesLabel } from './constants'
 export { CATEGORIAS, FORMAS_PAGAMENTO } from './constants'
 
 function getAuth(): OAuth2Client {
-  const client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-  )
-  client.setCredentials({
-    refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+  const clientId = process.env.GOOGLE_CLIENT_ID
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN
+
+  console.log('[getAuth] GOOGLE_CLIENT_ID      :', clientId ? `${clientId.slice(0, 20)}...` : 'AUSENTE')
+  console.log('[getAuth] GOOGLE_CLIENT_SECRET  :', clientSecret ? `${clientSecret.slice(0, 6)}...` : 'AUSENTE')
+  console.log('[getAuth] GOOGLE_REFRESH_TOKEN  :', refreshToken ? `${refreshToken.slice(0, 15)}...` : 'AUSENTE')
+
+  const client = new google.auth.OAuth2(clientId, clientSecret)
+  client.setCredentials({ refresh_token: refreshToken })
+
+  // Intercepta o evento de refresh para logar o resultado exato do Google
+  client.on('tokens', (tokens) => {
+    console.log('[getAuth] tokens recebidos após refresh:',
+      JSON.stringify({
+        access_token: tokens.access_token ? `${tokens.access_token.slice(0, 20)}...` : null,
+        expiry_date: tokens.expiry_date,
+        token_type: tokens.token_type,
+        scope: tokens.scope,
+      })
+    )
   })
+
   return client
+}
+
+async function getAccessToken(client: OAuth2Client): Promise<void> {
+  console.log('[getAccessToken] solicitando access token ao Google...')
+  try {
+    const response = await client.getAccessToken()
+    console.log('[getAccessToken] sucesso — token:', response.token ? `${response.token.slice(0, 20)}...` : 'nulo')
+  } catch (err: unknown) {
+    const e = err as { message?: string; response?: { status?: number; data?: unknown } }
+    console.error('[getAccessToken] ERRO ao obter access token')
+    console.error('[getAccessToken] message  :', e?.message)
+    console.error('[getAccessToken] http status:', e?.response?.status)
+    console.error('[getAccessToken] resposta Google:', JSON.stringify(e?.response?.data))
+    throw err
+  }
 }
 
 function parseValor(raw: string | undefined): number {
@@ -28,6 +59,7 @@ function parseValor(raw: string | undefined): number {
 
 export async function getSalario(): Promise<number> {
   const auth = getAuth()
+  await getAccessToken(auth)
   const sheets = google.sheets({ version: 'v4', auth })
   const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID
   const sheetName = process.env.GOOGLE_SHEET_NAME ?? 'Gastos & Dashboard'
@@ -42,6 +74,7 @@ export async function getSalario(): Promise<number> {
 
 export async function getGastos(): Promise<Gasto[]> {
   const auth = getAuth()
+  await getAccessToken(auth)
   const sheets = google.sheets({ version: 'v4', auth })
 
   const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID
