@@ -29,6 +29,7 @@ function parseInputDate(ymd: string): number {
 export default function HistoricoPage() {
   const [gastos, setGastos] = useState<Gasto[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [categoria, setCategoria] = useState('')
   const [forma, setForma] = useState('')
@@ -38,8 +39,14 @@ export default function HistoricoPage() {
 
   useEffect(() => {
     fetch('/api/gastos')
-      .then((r) => r.json())
-      .then((data) => setGastos(data))
+      .then((r) => {
+        if (!r.ok) throw new Error('Erro ao buscar dados da planilha')
+        return r.json()
+      })
+      .then((data) => {
+        if (Array.isArray(data)) setGastos(data)
+      })
+      .catch((err) => setFetchError(err instanceof Error ? err.message : 'Erro desconhecido'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -203,6 +210,11 @@ export default function HistoricoPage() {
       <div className="card overflow-hidden">
         {loading ? (
           <LoadingSkeleton />
+        ) : fetchError ? (
+          <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+            <p className="text-4xl mb-3">⚠️</p>
+            <p className="text-sm text-rose-400">{fetchError}</p>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-600">
             <p className="text-4xl mb-3">🔍</p>

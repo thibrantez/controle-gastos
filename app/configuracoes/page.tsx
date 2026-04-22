@@ -55,11 +55,15 @@ export default function ConfiguracoesPage() {
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem(TELEGRAM_KEY)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      // não restaura enabled — sempre inicia como false
-      setChatId(parsed.chatId ?? '')
+    try {
+      const stored = localStorage.getItem(TELEGRAM_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        // não restaura enabled — sempre inicia como false
+        setChatId(parsed.chatId ?? '')
+      }
+    } catch {
+      // localStorage corrompido — ignora e usa defaults
     }
   }, [])
 

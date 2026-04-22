@@ -18,8 +18,12 @@ export default function CategoryBudgets({ gastosPorCategoria }: Props) {
   const [editValue, setEditValue] = useState('')
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) setBudgets(JSON.parse(stored))
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored) setBudgets(JSON.parse(stored))
+    } catch {
+      // localStorage corrompido — ignora e usa defaults
+    }
   }, [])
 
   const saveBudget = (cat: string, raw: string) => {
