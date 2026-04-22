@@ -15,7 +15,7 @@ function getAuth(): OAuth2Client {
 
   console.log('[getAuth] GOOGLE_CLIENT_ID      :', clientId ? `${clientId.slice(0, 20)}...` : 'AUSENTE')
   console.log('[getAuth] GOOGLE_CLIENT_SECRET  :', clientSecret ? `${clientSecret.slice(0, 6)}...` : 'AUSENTE')
-  console.log('[getAuth] GOOGLE_REFRESH_TOKEN  :', refreshToken ? `${refreshToken.slice(0, 15)}...` : 'AUSENTE')
+  console.log('[getAuth] GOOGLE_REFRESH_TOKEN  :', refreshToken ? `${refreshToken.slice(0, 20)}...` : 'AUSENTE')
 
   const client = new google.auth.OAuth2(clientId, clientSecret)
   client.setCredentials({ refresh_token: refreshToken })
